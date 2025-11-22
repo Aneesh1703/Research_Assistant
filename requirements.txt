@@ -1,0 +1,36 @@
+# --- Core Backend ---
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-dotenv
+requests
+
+# --- Data & Processing ---
+numpy
+pandas
+beautifulsoup4
+tiktoken
+nltk
+
+# --- PDF Parsing ---
+PyPDF2
+pdfplumber
+PyMuPDF
+
+# --- RAG & Embeddings ---
+faiss-cpu
+sentence-transformers
+langchain
+chromadb
+
+# --- LLM (Gemini) ---
+google-generativeai
+
+# --- Utilities ---
+loguru
+tqdm
+
+# --- Testing ---
+pytest
+httpx
