@@ -1,4 +1,4 @@
-# app/api/v1/endpoints/ingest.py
+
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.api.v1.schemas import URLIn, URLContentOut, PDFUploadOut
 from app.ingestion.pdf_parser import parse_pdf
