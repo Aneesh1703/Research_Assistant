@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     API_PORT: int = 8000
     API_PREFIX: str = "/api/v1"
     
+    # Database Configuration
+    DATABASE_URL: str = "postgresql://postgres:password@localhost:5432/RA_db"
+    DB_ECHO: bool = False
+    
     # CORS Settings
     CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
     CORS_ALLOW_CREDENTIALS: bool = True
@@ -47,4 +51,5 @@ class Settings(BaseSettings):
     )
 
 settings = Settings()
+
 

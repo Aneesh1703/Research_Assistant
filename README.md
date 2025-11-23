@@ -247,7 +247,7 @@ pytest app/tests/ -v
 
 ## 🚧 Roadmap
 
-- [ ] Query endpoint with mock RAG
+- [ ] Query endpoint with RAG
 - [ ] Real RAG implementation with LangChain
 - [ ] Vector database integration (ChromaDB/FAISS)
 - [ ] Authentication & authorization (JWT)
@@ -269,14 +269,12 @@ Contributions are welcome! Please follow these steps:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
 
-This project is licensed under the MIT License.
 
 ## 👤 Author
 
 **Your Name**
-- GitHub: [@yourusername](https://github.com/yourusername)
+-Aneesh Kulkarni
 
 ## 🙏 Acknowledgments
 

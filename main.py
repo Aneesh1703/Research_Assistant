@@ -12,6 +12,7 @@ from app.core.exceptions import (
     DocumentProcessingError
 )
 from app.api.v1.schemas import ErrorResponse
+from app.db.database import init_db
 import os
 
 
@@ -19,6 +20,10 @@ import os
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    print("🔄 Initializing database...")
+    init_db()  # Create database tables
+    print("✅ Database initialized!")
+    
     os.makedirs(settings.RAW_DATA_DIR, exist_ok=True)
     os.makedirs(settings.PROCESSED_DATA_DIR, exist_ok=True)
     os.makedirs(settings.CACHE_DIR, exist_ok=True)
@@ -27,6 +32,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown (if needed)
     print("Shutting down...")
+
 
 
 # Create FastAPI app
