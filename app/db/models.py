@@ -1,5 +1,5 @@
 # app/db/models.py
-from sqlalchemy import Column, String, Integer, Text, DateTime, Enum, JSON
+from sqlalchemy import Column, String, Integer, Text, DateTime, Enum, JSON, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
@@ -35,7 +35,15 @@ class Document(Base):
     word_count = Column(Integer, nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     processed_at = Column(DateTime, nullable=True)
-    extra_metadata = Column(JSON, nullable=True, default={})
+    extra_metadata = Column(JSON, nullable=True, default={})  # Renamed from 'metadata' (reserved word)
+    
+    # Indexes for performance
+    __table_args__ = (
+        Index('idx_documents_type', 'document_type'),
+        Index('idx_documents_status', 'status'),
+        Index('idx_documents_created_at', 'created_at'),
+        Index('idx_documents_type_status', 'document_type', 'status'),
+    )
     
     def __repr__(self):
         return f"<Document(id={self.id}, type={self.document_type}, title={self.title})>"
