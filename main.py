@@ -14,6 +14,7 @@ from app.core.exceptions import (
 from app.api.v1.schemas import ErrorResponse
 from app.db.database import init_db
 import os
+from app.api.v1.endpoints import health, documents, query
 
 
 # Lifespan event handler
@@ -108,6 +109,7 @@ async def root():
 # Include routers
 app.include_router(health.router, prefix=settings.API_PREFIX)
 app.include_router(documents.router, prefix=settings.API_PREFIX)
+app.include_router(query.router, prefix=settings.API_PREFIX)
 
 if __name__ == "__main__":
     import uvicorn

@@ -28,6 +28,8 @@ faiss-cpu
 sentence-transformers
 langchain
 chromadb
+llama-index-core
+tiktoken
 
 # --- LLM (Gemini) ---
 google-generativeai

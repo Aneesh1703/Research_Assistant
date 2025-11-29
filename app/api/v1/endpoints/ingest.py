@@ -24,3 +24,4 @@ async def ingest_pdf(file: UploadFile = File(...)):
         return {"filename": file.filename, "content": text}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+

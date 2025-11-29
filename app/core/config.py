@@ -33,21 +33,24 @@ class Settings(BaseSettings):
     CACHE_DIR: str = "data/cache"
     EMBEDDINGS_DIR: str = "data/embeddings"
     
-    # RAG Configuration (for future use)
-    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
-    VECTOR_DB_PATH: str = "data/embeddings/faiss_index"
+    # RAG Configuration
+    EMBEDDING_MODEL: str = "intfloat/e5-base-v2"
+    EMBEDDING_DIM: int = 768
+    VECTOR_DB_TYPE: str = "chromadb"
+    VECTOR_DB_PATH: str = "data/chromadb"
     CHUNK_SIZE: int = 500
     CHUNK_OVERLAP: int = 50
     
-    # LLM Configuration (optional for now)
+    # LLM Configuration
     GEMINI_API_KEY: Optional[str] = None
     LLM_TEMPERATURE: float = 0.7
-    LLM_MAX_TOKENS: int = 1000
+    LLM_MAX_TOKENS: int = 2000
 
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True,
-        env_ignore_empty=True
+        env_ignore_empty=True,
+        extra="ignore"  # Allow extra fields in .env
     )
 
 settings = Settings()

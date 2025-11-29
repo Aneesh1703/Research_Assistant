@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db import crud
 from app.db.models import DocumentTypeEnum
+from app.rag.pipeline import get_pipeline
 
 # Schemas
 from app.api.v1.schemas import (
@@ -80,6 +81,16 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
         # Store document in the document store (returns document_id)
         db_document = crud.create_document(db, document_data)
 
+        # Index in RAG
+        pipeline = get_pipeline()
+        index_result = pipeline.index_document(
+            content=text,
+            document_id=str(db_document.id),
+            metadata={"filename": file.filename, "title": document_data["title"], "document_type": "pdf"}
+        )
+        if index_result["success"]:
+            print(f"PDF indexed: {index_result.get('total_chunks', 0)} chunks")
+
         return DocumentIngestResponse(
             document_id=str(db_document.id),
             document_type=DocumentType.PDF,
@@ -140,6 +151,16 @@ async def ingest_url(
         # Store document in the document store (returns document_id)
         db_document = crud.create_document(db, document_data)
 
+        # Index in RAG
+        pipeline = get_pipeline()
+        index_result = pipeline.index_document(
+            content=content,
+            document_id=str(db_document.id),
+            metadata={"url": str(request.url), "title": title}
+        )
+        if index_result["success"]:
+            print(f"Indexed {index_result['total_chunks']} chunks")
+
         return DocumentIngestResponse(
             document_id=str(db_document.id),
             document_type=DocumentType.URL,
@@ -185,6 +206,17 @@ async def ingest_text(
         }
         # Store document in PostgreSQL database
         db_document = crud.create_document(db, document_data)
+
+
+        # Index in RAG
+        pipeline = get_pipeline()
+        index_result = pipeline.index_document(
+            content=request.content,
+            document_id=str(db_document.id),
+            metadata={"title": request.title}
+        )
+        if index_result["success"]:
+            print(f"Indexed {index_result['total_chunks']} chunks")
 
         return DocumentIngestResponse(
             document_id=str(db_document.id),
@@ -280,6 +312,12 @@ async def delete_document(document_id: str,db: Session = Depends(get_db)):
     
     # Delete from store
     success = crud.delete_document(db, document_id)
+
+    # Delete from vector store
+    pipeline = get_pipeline()
+    vector_result = pipeline.delete_document(document_id)
+    if vector_result["success"]:
+        print(f"Deleted {vector_result['chunks_deleted']} chunks from vector DB")
     
     if not success:
         raise HTTPException(status_code=500, detail="Failed to delete document")
