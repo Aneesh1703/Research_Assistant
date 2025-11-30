@@ -128,14 +128,6 @@ with st.sidebar:
     
     st.divider()
     
-    # Query Settings
-    st.subheader("Query Settings")
-    top_k = st.slider("Number of sources", 1, 10, 5)
-    score_threshold = st.slider("Similarity threshold", 0.0, 1.0, 0.5, 0.1)
-    use_mmr = st.checkbox("Use MMR (diversity)", value=True)
-    
-    st.divider()
-    
     # Refresh button
     if st.button("🔄 Refresh Data"):
         st.session_state.documents = get_documents()
@@ -165,8 +157,13 @@ with tab1:
         st.rerun()
     
     if query_button and question:
-        with st.spinner("Searching documents..."):
-            result = query_documents(question, top_k, score_threshold, use_mmr)
+        with st.spinner("🧠 Analyzing question and searching documents..."):
+            result = query_documents(
+                question=question,
+                top_k=5,  # Will be auto-adjusted by smart system
+                score_threshold=0.5,  # Will be auto-adjusted by smart system
+                use_mmr=True  # Will be auto-adjusted by smart system
+            )
             
             if result:
                 # Save to history
@@ -208,20 +205,80 @@ with tab2:
     
     with col1:
         st.subheader("📤 Upload Document")
-        uploaded_file = st.file_uploader(
-            "Choose a file",
-            type=["pdf", "txt", "md"],
-            help="Upload PDF, TXT, or MD files"
-        )
         
-        if uploaded_file:
-            if st.button("Upload", type="primary"):
-                with st.spinner("Uploading and indexing..."):
-                    result = upload_document(uploaded_file)
-                    if result:
-                        st.success(f"✅ {result.get('message', 'Document uploaded successfully!')}")
-                        st.session_state.documents = get_documents()
-                        st.rerun()
+        # Upload method tabs
+        upload_tab1, upload_tab2, upload_tab3 = st.tabs(["📄 File", "🔗 URL", "✏️ Text"])
+        
+        # File Upload
+        with upload_tab1:
+            uploaded_file = st.file_uploader(
+                "Choose a file",
+                type=["pdf", "txt", "md"],
+                help="Upload PDF, TXT, or MD files (up to 100MB)"
+            )
+            
+            if uploaded_file:
+                if st.button("Upload File", type="primary", key="upload_file"):
+                    with st.spinner("Uploading and indexing..."):
+                        result = upload_document(uploaded_file)
+                        if result:
+                            st.success(f"✅ {result.get('message', 'Document uploaded successfully!')}")
+                            st.session_state.documents = get_documents()
+                            st.rerun()
+        
+        # URL Upload
+        with upload_tab2:
+            url_input = st.text_input(
+                "Enter URL",
+                placeholder="https://example.com/article",
+                help="Paste a URL to scrape and index"
+            )
+            
+            if url_input:
+                if st.button("Fetch & Index URL", type="primary", key="upload_url"):
+                    with st.spinner("Fetching and indexing URL..."):
+                        try:
+                            payload = {"url": url_input}
+                            response = requests.post(f"{API_BASE_URL}/documents/url", json=payload)
+                            response.raise_for_status()
+                            result = response.json()
+                            st.success(f"✅ {result.get('message', 'URL indexed successfully!')}")
+                            st.session_state.documents = get_documents()
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"URL upload failed: {str(e)}")
+        
+        # Text Upload
+        with upload_tab3:
+            text_title = st.text_input(
+                "Document Title",
+                placeholder="My Research Notes",
+                help="Give your text document a title"
+            )
+            
+            text_content = st.text_area(
+                "Paste your text here",
+                placeholder="Enter or paste your text content...",
+                height=200,
+                help="Paste any text content to index"
+            )
+            
+            if text_title and text_content:
+                if st.button("Index Text", type="primary", key="upload_text"):
+                    with st.spinner("Indexing text..."):
+                        try:
+                            payload = {
+                                "title": text_title,
+                                "content": text_content
+                            }
+                            response = requests.post(f"{API_BASE_URL}/documents/text", json=payload)
+                            response.raise_for_status()
+                            result = response.json()
+                            st.success(f"✅ {result.get('message', 'Text indexed successfully!')}")
+                            st.session_state.documents = get_documents()
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Text upload failed: {str(e)}")
     
     with col2:
         st.subheader("📊 Quick Stats")

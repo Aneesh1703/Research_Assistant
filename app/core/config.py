@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     CORS_ALLOW_HEADERS: list[str] = ["*"]
     
     # File Upload Settings
-    MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
+    MAX_UPLOAD_SIZE: int = 100 * 1024 * 1024  # 100MB
     ALLOWED_EXTENSIONS: list[str] = [".pdf", ".txt", ".md"]
     
     # Data Paths

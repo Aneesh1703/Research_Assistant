@@ -82,6 +82,124 @@ class RAGPipeline:
         
         return results
     
+    def _classify_query_type(self, question: str) -> Dict:
+        """Classify query and return optimal retrieval parameters."""
+        question_lower = question.lower()
+        
+        # Define query patterns
+        patterns = {
+            'factual': {
+                'keywords': ['what is', 'who is', 'when', 'where', 'define', 'definition'],
+                'params': {'top_k': 3, 'score_threshold': 0.7, 'use_mmr': False}
+            },
+            'comparative': {
+                'keywords': ['compare', 'difference', 'versus', 'vs', 'contrast', 'similar'],
+                'params': {'top_k': 8, 'score_threshold': 0.4, 'use_mmr': True}
+            },
+            'summary': {
+                'keywords': ['summarize', 'summary', 'overview', 'main points', 'key findings'],
+                'params': {'top_k': 10, 'score_threshold': 0.3, 'use_mmr': True}
+            },
+            'analytical': {
+                'keywords': ['why', 'how', 'explain', 'analyze', 'reason', 'cause'],
+                'params': {'top_k': 7, 'score_threshold': 0.5, 'use_mmr': True}
+            },
+            'list': {
+                'keywords': ['list', 'enumerate', 'what are', 'which', 'all'],
+                'params': {'top_k': 8, 'score_threshold': 0.4, 'use_mmr': True}
+            }
+        }
+        
+        # Detect query type
+        for query_type, config in patterns.items():
+            for keyword in config['keywords']:
+                if keyword in question_lower:
+                    logger.info(f"🎯 Query type: {query_type.upper()}")
+                    return {
+                        'type': query_type,
+                        **config['params']
+                    }
+        
+        # Default: general question
+        logger.info(f"🎯 Query type: GENERAL")
+        return {
+            'type': 'general',
+            'top_k': 5,
+            'score_threshold': 0.5,
+            'use_mmr': True
+        }
+    
+    def _route_to_document(self, question: str) -> Optional[str]:
+        """Use LLM to intelligently route query to the right document."""
+        try:
+            # Get all unique documents from vector store
+            all_chunks = self.retriever.retrieve(
+                query=question,
+                top_k=100,
+                score_threshold=0.0
+            )
+            
+            if not all_chunks:
+                return None
+            
+            # Extract unique documents with their metadata
+            docs = {}
+            for chunk in all_chunks:
+                doc_id = chunk['metadata'].get('document_id')
+                if doc_id and doc_id not in docs:
+                    docs[doc_id] = {
+                        'title': chunk['metadata'].get('title', 'Untitled'),
+                        'filename': chunk['metadata'].get('filename', ''),
+                        'document_type': chunk['metadata'].get('document_type', '')
+                    }
+            
+            if len(docs) <= 1:
+                return None  # Only one document, no routing needed
+            
+            # Build document list for LLM
+            doc_list = []
+            for doc_id, metadata in docs.items():
+                doc_info = f"- {metadata['title']}"
+                if metadata['filename']:
+                    doc_info += f" (File: {metadata['filename']})"
+                if metadata['document_type']:
+                    doc_info += f" [Type: {metadata['document_type']}]"
+                doc_list.append(doc_info)
+            
+            # Create routing prompt
+            routing_prompt = f"""You are a document router. The user asked:
+
+"{question}"
+
+Available documents:
+{chr(10).join(doc_list)}
+
+Task: Identify which ONE document the user is asking about.
+- If the question clearly refers to a specific document, return ONLY that document's title.
+- If the question is general or refers to multiple documents, return "ALL".
+- Be smart about synonyms (e.g., "CV" = "resume", "paper" = "research article").
+
+Return ONLY the document title or "ALL". Nothing else."""
+
+            # Use LLM to route
+            response = self.llm.generate(routing_prompt, tier="flash")
+            selected = response.strip()
+            
+            logger.info(f"🧠 LLM Router: '{selected}' for query: '{question[:50]}...'")
+            
+            # Find matching document ID
+            if selected != "ALL":
+                for doc_id, metadata in docs.items():
+                    if selected.lower() in metadata['title'].lower():
+                        logger.info(f"✅ Routed to document: {metadata['title']} (ID: {doc_id})")
+                        return doc_id
+            
+            return None  # Search all documents
+            
+        except Exception as e:
+            logger.error(f"Error in document routing: {e}")
+            return None
+    
     
     def query(
         self,
@@ -96,6 +214,22 @@ class RAGPipeline:
     ) -> Dict:
         try:
             logger.info(f"Query: '{question[:50]}...'")
+            
+            # 🧠 Smart parameter selection based on query type
+            smart_params = self._classify_query_type(question)
+            
+            # Override with smart params (user can still override via API)
+            if top_k == 5 and score_threshold == 0.5:  # Using defaults
+                top_k = smart_params['top_k']
+                score_threshold = smart_params['score_threshold']
+                use_mmr = smart_params['use_mmr']
+                logger.info(f"📊 Auto-adjusted: top_k={top_k}, threshold={score_threshold}, mmr={use_mmr}")
+            
+            # 🧠 Smart document routing with LLM
+            if filter_metadata is None:
+                routed_doc_id = self._route_to_document(question)
+                if routed_doc_id:
+                    filter_metadata = {"document_id": routed_doc_id}
             
             # 1. Retrieve relevant chunks
             chunks = self.retriever.retrieve(

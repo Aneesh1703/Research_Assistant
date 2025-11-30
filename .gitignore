@@ -1,9 +1,12 @@
 __pycache__/
 .env
-.env.*
 *.pyc
 venv/
 .env.local
 .DS_Store
 data/embeddings/
 data/cache/
+improvements.md
+data/chromadb/
+data/processed/
+data/raw/
