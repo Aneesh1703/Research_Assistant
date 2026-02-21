@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
+import os
 
 class Settings(BaseSettings):
     # App Info
@@ -8,8 +9,8 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     
     # API Configuration
-    API_HOST: str = "127.0.0.1"
-    API_PORT: int = 8000
+    API_HOST: str = "0.0.0.0"
+    API_PORT: int = int(os.environ.get("PORT", 8000))
     API_PREFIX: str = "/api/v1"
     
     # Database Configuration

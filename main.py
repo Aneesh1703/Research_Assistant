@@ -116,7 +116,8 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",  # Use import string instead of app object
         host=settings.API_HOST, 
-        port=settings.API_PORT,
+        port=int(os.environ.get("PORT", 10000)),
+
         reload=settings.DEBUG
     )
 
