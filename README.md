@@ -22,7 +22,7 @@ An advanced document Q&A system powered by RAG (Retrieval Augmented Generation) 
 ### 🧠 **Advanced RAG Pipeline**
 - **E5-Base-v2 Embeddings** - High-quality semantic search (768 dimensions)
 - **ChromaDB Vector Store** - Persistent, local vector database
-- **Gemini 2.0 Flash/Pro** - Tiered LLM with auto-selection
+- **Gemini 2.5 Flash/Pro** - Tiered LLM with auto-selection
 - **MMR Reranking** - Balances relevance and diversity
 - **Citation Support** - Answers include source references
 
@@ -273,25 +273,6 @@ CHUNK_SIZE=500
 CHUNK_OVERLAP=50
 MAX_UPLOAD_SIZE=104857600  # 100MB
 ```
-
----
-
-## 📊 Performance
-
-**Indexing:**
-- ~100 chunks/second
-- Depends on document size
-
-**Query Latency:**
-- Retrieval: ~100-200ms
-- LLM generation: ~1-3 seconds (Flash)
-- **Total: ~1.5-3 seconds per query**
-
-**Scalability:**
-- Tested with 100+ documents
-- 10,000+ chunks
-- Sub-second retrieval
-
 ---
 
 ## 🎓 Use Cases
@@ -386,6 +367,6 @@ Contributions welcome! Please:
 
 ---
 
-**Built with ❤️ using FastAPI, Streamlit, and Gemini 2.0**
+**Built with ❤️ using FastAPI, Streamlit, and Gemini 2.5**
 
 **⭐ Star this repo if you find it useful!**
